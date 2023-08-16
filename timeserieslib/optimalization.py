@@ -10,28 +10,24 @@ Implemented algorithms:
 Stohcastic Gradient descent
 Mean-Square error
 Iteratively reweighted least squares
+Derivative-free algorithms
 """
 import numpy as np
 
-
-#testing constant
-DELTA = 10e-6
-def euclidean_norm(x):
+def L2_norm(x):
 	return np.linalg.norm(x)
 
-def MSE(x,y,**kwargs):
+def l2_dist(x,y,**kwargs):
 	return np.linalg.norm(x-y)
 
+def standard_scale(data_matrix):
+	return (data_matrix - data_matrix.mean())/(data_matrix.std())
 
 
 
 if __name__ == "__main__":    
-	# MSE test
-	print('MSE test:')
-	x = np.array([20,30.1,18.8,-12,-10])
-	y = np.array([1.7,-2.1,3.10,-4.20,-10])
-	if (MSE(x,y) - 40.97633463354184) > DELTA:
-		print('Value test false:')
-		print(f'Expected output was 40.97633463354184 but {MSE(x,y)} was returned.')
-	else:
-		print('Value test passed')
+	#testing
+	#treshold error for testing
+	EPSILON = 10e-6
+	a = np.array([1,2,3,4,5])
+	print(standard_scale(a))
