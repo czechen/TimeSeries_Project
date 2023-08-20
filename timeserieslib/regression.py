@@ -8,7 +8,7 @@ Regression Module
 Implemented algorithms:
 Linear - DONE
 GLE - TODO
-Ridge (L1 regularization) (part of the linear regression) - DONE (partly)
+Ridge (L2 regularization) (part of the linear regression) - DONE (partly)
 Polynomial - DONE
 
 Other:
@@ -16,9 +16,10 @@ Plotting - DONE
 Errors for coeffs - TODO
 
 """
+import sys, os
+sys.path.append(os.getcwd())
 import numpy as np
-import exceptions
-import sys
+import timeserieslib.exceptions as exceptions
 from matplotlib import pyplot as plt
 
 
@@ -27,14 +28,14 @@ from matplotlib import pyplot as plt
 
 class LinearRegression(object):
 	'''
-	Linear Regression with L1 regulaziation
+	Linear Regression with L2 regulaziation
 
 	'''
-	def __init__(self,data_matrix,y,intercept = True, L1_coeff = 0):
+	def __init__(self,data_matrix,y,intercept = True, L2_coeff = 0):
 		self.n = len(y) #number of 'samples'
 		self.dim = len(data_matrix[0]) #dimension
 		self.intercept = intercept
-		self.L1 = L1_coeff
+		self.L2 = L2_coeff
 		if intercept:
 			ones_matrix = np.ones((self.n,self.dim+1))
 			ones_matrix[:,:-1] = data_matrix
@@ -47,9 +48,9 @@ class LinearRegression(object):
 	
 	def fit(self):
 		#calculates the paramateres of linear regression using the closed form
-		self.params = np.dot(np.linalg.inv(np.dot(self.data.T,self.data)+self.L1*np.identity(self.k)),np.dot(self.data.T,y)) #(X^TX-lambdaI)^(-1)X^Ty (Ridge)
+		self.params = np.dot(np.linalg.inv(np.dot(self.data.T,self.data)+self.L2*np.identity(self.k)),np.dot(self.data.T,self.y)) #(X^TX-lambdaI)^(-1)X^Ty (Ridge)
 		SSr = np.linalg.norm(self.y - np.dot(self.data,self.params))**2 #residual sum of squares
-		SSt = np.linalg.norm(self.y - np.mean(y)*np.ones((self.n,1)))**2 #total sum of squares
+		SSt = np.linalg.norm(self.y - np.mean(self.y)*np.ones((self.n,1)))**2 #total sum of squares
 		self.R_squared = 1-SSr/SSt
 		return self.params,self.R_squared
 
@@ -78,7 +79,7 @@ class LinearRegression(object):
 					for k in range(self.k):
 						self.params[k] = self.params[k] + learning_step*(r[j])*self.data[j][k]
 		SSr = np.linalg.norm(self.y - np.dot(self.data,self.params))**2 #residual sum of squares
-		SSt = np.linalg.norm(self.y - np.mean(y)*np.ones((self.n,1)))**2 #total sum of squares
+		SSt = np.linalg.norm(self.y - np.mean(self.y)*np.ones((self.n,1)))**2 #total sum of squares
 		self.R_squared = 1-SSr/SSt
 		return self.params,self.R_squared 
 

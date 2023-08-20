@@ -42,8 +42,12 @@ class DataSet:
 			self.date = date
 			search_value = (11-len(str(self.ID))) * '0' + str(self.ID) + '_' + self.date
 			self.file_names = glob(f'/home/czechen/Projects/Diplomka/DATA/csv_points/{search_value}*') #search for all files corresponding to evaluation
-			self.label = self.file_names[0].split('/')[7].split('_')[4][-1]
-			self.BF = self.file_names[0].split('/')[7].split('_')[5][-1]
+			for i in self.file_names[0].split('/')[7].split('_'):
+				if 'eval=' in str(i):
+					self.label = int(i[-1])
+				if 'bf=' in i:
+					self.BF = int(i[-1])
+					break
 			self.standard = standardization
 			self.load_data()
 
@@ -89,7 +93,7 @@ class DataSet:
 						x_mean,x_var = np.mean(x),np.var(x)
 						y_mean,y_var = np.mean(y),np.var(y)
 						z_mean,z_var = np.mean(z),np.var(z)
-						for j in range(len(t)):
+						for j in range(len(x)):
 							x[j] = (x[j] - x_mean)/x_var
 							y[j] = (y[j] - y_mean)/y_var
 							z[j] = (z[j] - z_mean)/z_var
@@ -181,11 +185,11 @@ class DataSet:
 		patient = self.PatientEval(ID,date,standardization)
 		return(patient)	
 
-	def load_all(self):
+	def load_all(self,standardization = True):
 		data = []
 		for i in self.Patients.keys():
 			for j in self.Patients[i]:
-				data.append(self.load_patient(i,j))
+				data.append(self.load_patient(i,j,standardization))
 		self.dataset = data
 
 #Testing
@@ -197,6 +201,7 @@ if __name__ == "__main__":
 	print(patient.DATA[0])
 	print(len(patient.DATA[0]))
 	#plt.plot(patient.DATA[0][0],patient.DATA[0][3])
-	plt.plot(list(range(len(patient.DATA[0][0]))),patient.DATA[0][3])
-	plt.show()
-	DataSet.load_all()
+	#plt.plot(list(range(len(patient.DATA[0][0]))),patient.DATA[0][3])
+	#plt.show()
+	print(patient.label)
+	#DataSet.load_all()

@@ -3,27 +3,13 @@
 """
 Optimalization Module
 -------------------
-
-
-Implemented algorithms:
-(batch) Gradient descent
-Stohcastic Gradient descent
-Mean-Square error
-Iteratively reweighted least squares
-Derivative-free algorithms
+nearest neighbor graph (NNG) TODO
 """
+
 import numpy as np
 
-def L2_norm(x):
-	return np.linalg.norm(x)
-
-def l2_dist(x,y,**kwargs):
-	return np.linalg.norm(x-y)
-
-def standard_scale(data_matrix):
+def Standard_scale(data_matrix):
 	return (data_matrix - data_matrix.mean())/(data_matrix.std())
-
-
 
 if __name__ == "__main__":    
 	#testing
