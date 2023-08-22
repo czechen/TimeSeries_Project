@@ -1,5 +1,8 @@
 #!/bin/python3
-
+'''
+Module for testing python functionality.
+Later it might be used for module testing
+'''
 class Model(object):
 	def f(self,x):
 		return 2*x

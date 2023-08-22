@@ -28,7 +28,8 @@ from matplotlib import pyplot as plt
 
 class LinearRegression(object):
 	'''
-	Linear Regression with L2 regulaziation
+	Linear Regression with L2 regularization
+
 
 	'''
 	def __init__(self,data_matrix,y,intercept = True, L2_coeff = 0):
@@ -54,19 +55,13 @@ class LinearRegression(object):
 		self.R_squared = 1-SSr/SSt
 		return self.params,self.R_squared
 
-	def predict(self,values):
-		if values.shape[1] != self.dim:
-			raise exceptions.IncompatibleDimensions(f'Incorrect number of predictors; expected {self.dim} but {values.shape[1]} were given')
-		params = getattr(self, 'params', None)
-		if type(params) == type(None):
-			self.fit()
-			print(self.params)
-		val_matrix = np.ones((len(values),self.dim+int(self.intercept)))
-		val_matrix[:,0:self.dim] = values
-		return np.dot(val_matrix,self.params)
-		
-
 	def fit_sgd(self,MAX_STEPS,treshold_error,learning_step):
+		'''
+		Computing model parameters using stochastic gradient descent
+
+		this approach is not recommended because gradient descent is not the optimal way for solving linear systems (closed formula is preffered)
+		mostly used for educational purposes and is very unstable 
+		'''
 		if self.L1 != 0:
 			raise AttributeError( "Using SGD for Ridge Regression fitting is not recommended" )
 		self.params = np.ones([self.k,1])
@@ -83,8 +78,20 @@ class LinearRegression(object):
 		self.R_squared = 1-SSr/SSt
 		return self.params,self.R_squared 
 
+	def predict(self,values):
+		#returns the model prediction
+		if values.shape[1] != self.dim:
+			raise exceptions.IncompatibleDimensions(f'Incorrect number of predictors; expected {self.dim} but {values.shape[1]} were given')
+		params = getattr(self, 'params', None)
+		if type(params) == type(None):
+			self.fit()
+		val_matrix = np.ones((len(values),self.dim+int(self.intercept)))
+		val_matrix[:,0:self.dim] = values
+		return np.dot(val_matrix,self.params)
+
 
 	def plot(self,DPI):
+		#Plots the regression line with predicted values
 		params = getattr(self, 'params', None)
 		if type(params) == type(None):
 			self.fit()
@@ -201,4 +208,3 @@ if __name__ == "__main__":
 	print(model_pol.predict(np.array([[2]])))
 	model_pol.plot(300)
 	'''
-

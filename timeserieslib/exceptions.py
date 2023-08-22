@@ -12,3 +12,6 @@ class IncompatibleDimensions(Exception):
 
 class DimensionError(Exception):
     pass
+
+class ModelNotTrained(Exception):
+    pass

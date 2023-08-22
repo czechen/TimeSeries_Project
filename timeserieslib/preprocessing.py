@@ -14,6 +14,21 @@ from glob import glob
 from matplotlib import pyplot as plt
 
 class DataSet:
+	'''
+	DATASET class
+	contains the whole dataset with patients IDs
+
+	Atributes: 
+	dataset		data for every patient
+	Patients IDs for patients
+
+	Methods:
+	load_patient(ID,date,standardization=False)		loads a patient given ID and date of measurment, returns PatientEval class instance
+	validate(ID, date,MEAN,SD)		allows to validate a patients, used to exclude incorrectly measured patients
+	load_all() 		loads the data for every patient evaluation in the dataset
+	'''
+
+	#constants and keys for correct dataset loading
 	CVIKY = ['oboci','mraceni','oci','usmev','zuby','spuleni-rtu','tvare-nafouknuti','oci-zuby','celo-rty']
 	points_names = {0:'LefteyeMidbottom',1:'LefteyeMidtop',2:'LefteyeInnercorner',3:'LefteyeOutercorner',
 			4:'LefteyebrowInner',5:'LefteyebrowCenter',6:'RighteyeMidbottom',7:'RighteyeMidtop',8:'RighteyeInnercorner',9:'RighteyeOutercorner',
@@ -24,6 +39,7 @@ class DataSet:
 	#SD = s.std()[0]
 
 	class PatientEval():
+
 		"""
 		Class storing information of one pation evaluation. Evaluations of the same patient at different dates are considered independent.
 		load_data concatenates every exercise into one np.array and stores it as [t,x,y,z] vector for every measured point
@@ -35,13 +51,18 @@ class DataSet:
 		label	HB value of the pation
 		BF	befor/after medical procedure
 		DATA	[t,x,y,z] vector of concatenated exercises of every point separately, dims: 21x4x(measurement lenght)
-
+		
+		Methods:
+		load_data() loads all the data for a given patient, points are stored seperately
+		shape() returns the shape of the data
+		load_exercises() returns the patient data, exercise are stored seperately (in contrast to load_data())
 		"""
 		def __init__(self, ID, date,standardization):
 			self.ID = ID
 			self.date = date
 			search_value = (11-len(str(self.ID))) * '0' + str(self.ID) + '_' + self.date
 			self.file_names = glob(f'/home/czechen/Projects/Diplomka/DATA/csv_points/{search_value}*') #search for all files corresponding to evaluation
+			#assign the correct label and bf
 			for i in self.file_names[0].split('/')[7].split('_'):
 				if 'eval=' in str(i):
 					self.label = int(i[-1])
@@ -51,6 +72,8 @@ class DataSet:
 			self.standard = standardization
 			self.load_data()
 
+		#data loading for each face point separately
+		#time is stored on its own
 		def load_data(self):
 			self.DATA = []
 			self.time = []
@@ -126,6 +149,9 @@ class DataSet:
 						self.DATA.append(np.array([np.array(x),np.array(y),np.array(z)]))
 
 		def shape(self):
+			params = getattr(self, 'DATA', None)
+			if type(params) == type(None):
+				self.load_data()
 			return self.DATA.shape()
 
 		def load_exercises(self):
@@ -143,16 +169,7 @@ class DataSet:
 					z = z+list(point.z)
 				self.DATA.append(np.array([np.array(t),np.array(x),np.array(y),np.array(z)]))
 	def __init__(self):
-		'''
-		self.CVIKY = ['oboci','mraceni','oci','usmev','zuby','spuleni-rtu','tvare-nafouknuti','oci-zuby','celo-rty']
-		self.points_names = {0:'LefteyeMidbottom',1:'LefteyeMidtop',2:'LefteyeInnercorner',3:'LefteyeOutercorner',
-			4:'LefteyebrowInner',5:'LefteyebrowCenter',6:'RighteyeMidbottom',7:'RighteyeMidtop',8:'RighteyeInnercorner',9:'RighteyeOutercorner',
-			10:'RighteyebrowInner',11:'RighteyebrowCenter',12:'NoseTip',13:'MouthLowerlipMidbottom',14:'MouthLeftcorner',15:'MouthRightcorner',
-			16:'MouthUpperlipMidtop',17:'ChinCenter',18:'ForeheadCenter',19:'LeftcheekCenter',20:'RightcheekCenter'}
-		s = pd.read_csv('/home/czechen/Projects/Diplomka/DATA/len.txt')
-		self.MEAN = int(s.mean()[0])
-		self.SD = s.std()[0]
-		'''
+		#searches for all unique patient evaluations
 		patients = {}
 		for i in glob('/home/czechen/Projects/Diplomka/DATA/csv_points/*'):
 			ID = int(i.split('/')[7].split('_')[0])
@@ -166,6 +183,7 @@ class DataSet:
 		self.Patients = {i: sorted(list(patients[i])) for i in keys}
 
 	def __len__(self):
+		#Computes the number of patient evaluations
 		S = 0
 		for i in self.Patients.keys():
 			S += len(self.Patients[i])
@@ -182,6 +200,7 @@ class DataSet:
 			return False
 
 	def load_patient(self,ID,date,standardization=False):
+		#patient loading based on patient ID and date of the evaluation
 		patient = self.PatientEval(ID,date,standardization)
 		return(patient)	
 

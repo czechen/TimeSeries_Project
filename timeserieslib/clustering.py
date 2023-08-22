@@ -13,13 +13,15 @@ OPTICS TODO
 Others:
 finding optimal epsilon for DBSCAN using k-nearest neighbor graph
 https://stackoverflow.com/questions/15050389/estimating-choosing-optimal-hyperparameters-for-dbscan
-
+DBSCAN optimalization using R(*)-tree
 """
 import sys,os
 import numpy as np
 sys.path.append(os.getcwd())
 import timeserieslib.optimalization as opt
+import timeserieslib.exceptions as exc
 from matplotlib import pyplot as plt
+
 
 np.random.seed(42)
 
@@ -27,10 +29,12 @@ np.random.seed(42)
 class KMeans(object):
 	'''
 	K-means clustering
+
 	'''
 	def __init__(self,data, num_of_clusters):
 		self.num_clust = num_of_clusters
 		self.data = data #data matrix
+		self.fitted = None
 
 	def fit(self,MAX_ITER,threshold_error):
 		#initialization using k++
@@ -60,9 +64,15 @@ class KMeans(object):
 					self.centroids[i] = previous_centroids[i]
 			if sum([np.linalg.norm(self.centroids[i],previous_centroids[i]) for i in range(i)]) < threshold_error:
 				return self.centroids
+		self.fitted = True
 		return self.centroids
 
 	def evaluate(self,values):
+		'''
+		Each elements in values is assigned a clased based on the clustering model trained above
+		'''
+		if not self.fitted:
+			raise exc.ModelNotTrained('Cannot evaluate. Model is yet to be trained.')
 		clusters = [[] for i in range(self.num_clust)]
 		for x in values:
 			dist_to_cetroids = [np.linalg.norm(x,self.centroids[i]) for i in range(self.num_clust)]
@@ -71,6 +81,10 @@ class KMeans(object):
 		return clusters
 
 class DBSCAN_point(object):
+	'''
+	Adds multiple attributes to data_point.
+	Used for DBSCAN below.
+	'''
 	def __init__(self,data_point, label = -1, neighbours = None,center = False):
 		self.point = data_point
 		self.label = label
@@ -82,6 +96,7 @@ class DBSCAN2(object):
 	'''
 	DBSCAN clustering 
 	
+	standard DBSCAN implementation with naive RangeQuery
 	'''
 	def __init__(self,data_matrix,minPts,epsilon,distance_function = 2):
 		self.epsilon = epsilon
@@ -110,7 +125,9 @@ class DBSCAN2(object):
 				x.center = True
 				S = x.neighbours
 				for y in S:
-					if y.label == 0 or y.label == -1:
+					if y.label == 0:
+						y.label = self.num_of_clusters
+					if y.label == -1:
 						y.label = self.num_of_clusters
 						y.neighbours = self.find_neighbours(y)
 						if len(y.neighbours) >= self.minPts:
@@ -125,6 +142,7 @@ class DBSCAN2(object):
 		return 1
 
 	def plot(self,DPI):
+		#plotting clustering results for 2D data
 		X,Y,core_indices = [],[],[]
 		for x in self.data:
 			X.append(list(x.point))
@@ -204,7 +222,6 @@ if __name__ == "__main__":
 	'''
 	from sklearn.datasets import make_blobs
 	from sklearn.preprocessing import StandardScaler
-	from sklearn import metrics
 	from sklearn.cluster import DBSCAN
 
 
@@ -264,6 +281,3 @@ if __name__ == "__main__":
 
 	plt.title(f"Estimated number of clusters: {n_clusters_}")
 	plt.show()
-
-
-

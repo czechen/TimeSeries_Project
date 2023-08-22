@@ -8,7 +8,15 @@ nearest neighbor graph (NNG) TODO
 
 import numpy as np
 
+
 def Standard_scale(data_matrix):
+	'''
+	Standardization function
+
+	returns a data_matrix where every element was standardized based on the formula:
+
+	x_std = (x-mu)/sigma, where mu is the data_matrix mean and sigma is its standard deviation
+	'''
 	return (data_matrix - data_matrix.mean())/(data_matrix.std())
 
 if __name__ == "__main__":    
