@@ -61,35 +61,72 @@ if __name__ == '__main__':
 
     Vars = np.loadtxt('VARS.txt',dtype=float)
     labels = np.loadtxt('LABELS.txt',dtype=float)
-    train_indices = np.random.choice(len(labels),size = int(len(labels)*0.9),replace = False)
-    test_indices = np.delete(np.arange(0,len(labels)),train_indices)
-    train_data,train_labels = Vars[train_indices],labels[train_indices]
-    test_data,test_labels = Vars[test_indices],labels[test_indices]
+    #removing Nan values
     print(f'Is Nan check: {sum(np.isnan(Vars))}')
     print(f'Nan index: {np.argwhere(np.isnan(Vars))}')
     Vars = np.delete(Vars,[15],0)
     labels = np.delete(labels,[15],0)
     print(f'Is Nan check: {sum(np.isnan(Vars))}')
     print(f'Nan index: {np.argwhere(np.isnan(Vars))}')
-    print(len(Vars))
-    lpo = LeavePOut(p=1)
-    clf = Ridge(alpha=1e-7)
-    print(clf.fit(test_data,test_labels))
-    print(cross_val_score(clf,Vars,labels,scoring='neg_mean_squared_error',cv=10))
-    print(f'Score for test data: {clf.score(test_data,test_labels)}')
-    cv_scores = cross_val_score(clf,Vars,labels,scoring='neg_mean_squared_error',cv=lpo)
-    print(cv_scores.mean(),cv_scores.std())
 
+    clf = Ridge(alpha=1e-3)
 
+    #'''
+    #plotting leave one out results
+    predicted_labels = np.array([])
+    for i in range(len(Vars)):
+        train_data,train_labels = np.delete(Vars,[i],0), np.delete(labels,[i],0)
+        test_data = Vars[i]
+        clf.fit(train_data,train_labels)
+        predicted_labels = np.append(predicted_labels,clf.predict([test_data]))
 
+    fig, ax = plt.subplots(1, 1,figsize=(7,10),dpi=150)
+    index = np.arange(0,len(Vars))
+    errors = labels-predicted_labels
+    ax.scatter(index,errors,color='r',marker='x',label = 'Leave One out error')
+    ax.set_xlabel('Index')
+    ax.set_ylabel('Label Error')
+    ax.set_title(f'LOO error, MSE = {(np.sum(errors**2))/len(errors)}')
+    ax.legend()
+    ax.grid(True)
+    plt.show()
+    #'''
 
+    #plotting LPO results based on alpha
+    n_alphas = 15
+    alphas = np.logspace(-10, 0, n_alphas)
+    print(alphas)
+    lpos = [[],[]]
+    lpos_std = [[],[]]
+    for a in alphas:
+        clf = Ridge(alpha = a)
+        for p in [1,2]:
+            lpo = LeavePOut(p)
+            cv_scores = -1*cross_val_score(clf,Vars,labels,scoring='neg_mean_squared_error',cv=lpo)
+            lpos[p-1].append(cv_scores.mean())
+            lpos_std[p-1].append(cv_scores.std())
 
-
-    
-    #ridge = reg.LinearRegression(train_data,train_labels,intercept=True,L2_coeff = 0.01)
-    #print(ridge.fit())
-
+    print(lpos[0],lpos_std[0])
+    fig, ax = plt.subplots(1, 1,figsize=(7,10),dpi=150)
+    ax.errorbar(alphas,lpos[0],yerr=lpos_std[0],uplims=False, lolims=False,color = 'r',label = 'Avg. MSE for Leave One out')
+    ax.errorbar(alphas,lpos[1],yerr=lpos_std[1],uplims=False, lolims=False,color = 'g',label = 'Avg. MSE for Leave Two out')
+    ax.set_xlabel('Alpha')
+    ax.set_xscale("log")
+    ax.set_ylabel('Avg. MSE')
+    ax.set_title(f'Leave P out performance vs. alpha')
+    ax.legend()
+    ax.grid(True)
+    plt.show()
     #plotting the regression performance
+
+    train_indices = np.random.choice(len(labels),size = int(len(labels)*0.8),replace = False)
+    test_indices = np.delete(np.arange(0,len(labels)),train_indices)
+    train_data,train_labels = Vars[train_indices],labels[train_indices]
+    test_data,test_labels = Vars[test_indices],labels[test_indices]
+    
+    print(clf.fit(train_data,train_labels))
+    print(f'Score for test data: {clf.score(test_data,test_labels)}')
+    
     predicted_labels = clf.predict(test_data)
     index = np.arange(0,len(test_labels))
     print((np.linalg.norm(test_labels - predicted_labels)**2)/len(predicted_labels))
